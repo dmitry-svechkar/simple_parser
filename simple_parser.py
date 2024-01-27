@@ -1,9 +1,11 @@
-from collections.abc import Iterable
 from time import sleep
 
 import requests
 import xlsxwriter
 from bs4 import BeautifulSoup
+from requests.models import Response
+
+from decorators import count_time_of_programm
 
 BASE_URL: str = 'http://www.any_site.ru/Reestr/view?id='
 START_ID: int = 1
@@ -32,7 +34,7 @@ class ParseSiteData:
         url = BASE_URL + str(id)
         return url
 
-    def check_conection(self, url: str) -> Iterable:
+    def check_conection(self, url: str) -> Response:
         '''
         Проверяем код страницы.
         Если отдается 200, двигаем дальше.
@@ -43,7 +45,7 @@ class ParseSiteData:
             return check
         raise ValueError('Данная страница не доступна или отствует')
 
-    def parse_html(self, check: Iterable):
+    def parse_html(self, check: Response):
         '''Получаем разметку всей страницы.'''
         text = check.text
         return text
@@ -86,6 +88,7 @@ class ParseSiteData:
             worksheet.write_string(self.row, col + index_col, value)
         self.row += 1
 
+    @count_time_of_programm
     def main(self):
         '''Функция запуска функциональности.'''
         try:
