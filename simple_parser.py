@@ -10,6 +10,17 @@ START_ID: int = 1
 FINISH_ID: int = 1000
 XLS_NAME = 'demo.xlsx'
 WORKSHEET_NAME = 'Itery_1'
+STRUCTURE_OF_COLS: tuple[tuple[str, str]] = (
+            ('A1', 'name_org'),
+            ('B1', 'town'),
+            ('C1', 'inn'),
+            ('D1', 'ur_adr'),
+            ('E1', 'fact_adr'),
+            ('F1', 'director'),
+            ('G1', 'site'),
+            ('H1', 'telephon'),
+            ('I1', 'status')
+            )
 
 
 class ParseSiteData:
@@ -49,45 +60,31 @@ class ParseSiteData:
         site: str = soup.find_all('any-tag', class_="any-class").get_text()
         telephon: str = soup.find_all('any-tag', class_="any-class").get_text()
         status: str = soup.find_all('any-tag', class_="any-class").get_text()
-        return (
+        data = (
             name_org, town, inn, ur_adr, director,
             fact_adr, site, telephon, status
         )
+        return data
 
     def create_excel(self):
         '''Создаем xls и лист в нем.'''
         workbook = xlsxwriter.Workbook(XLS_NAME)
         worksheet = workbook.add_worksheet(WORKSHEET_NAME)
 
-        bold = workbook.add_format({'bold': 1})
+        bold = workbook.add_format({'bold': 5})
 
-        worksheet.write('A1', 'name_org', bold)
-        worksheet.write('B1', 'town', bold)
-        worksheet.write('C1', 'inn', bold)
-        worksheet.write('D1', 'ur_adr', bold)
-        worksheet.write('E1', 'fact_adr', bold)
-        worksheet.write('F1', 'director', bold)
-        worksheet.write('G1', 'site', bold)
-        worksheet.write('H1', 'telephon', bold)
-        worksheet.write('I1', 'status', bold)
+        for col_key, col_name in STRUCTURE_OF_COLS:
+            worksheet.write(col_key, col_name, bold)
+
         return worksheet, workbook
 
-    def write_excel(
-        self, name_org: str, town: str, inn: str, ur_adr: str,
-        director: str, fact_adr: str, site: str,
-        telephon: str, status: str, worksheet
-    ):
+    def write_excel(self, *data, worksheet):
         '''Записывает полученные данные.'''
         col = 0
-        worksheet.write_string(self.row, col, name_org)
-        worksheet.write_string(self.row, col + 1, town)
-        worksheet.write_string(self.row, col + 2, inn)
-        worksheet.write_string(self.row, col + 3, ur_adr)
-        worksheet.write_string(self.row, col + 4, fact_adr)
-        worksheet.write_string(self.row, col + 5, director)
-        worksheet.write_string(self.row, col + 6, site)
-        worksheet.write_string(self.row, col + 7, telephon)
-        worksheet.write_string(self.row, col + 8, status)
+
+        for index_col, value in enumerate(data):
+            worksheet.write_string(self.row, col + index_col, value)
+        self.row += 1
 
     def main(self):
         '''Функция запуска функциональности.'''
@@ -99,7 +96,6 @@ class ParseSiteData:
                 text = self.parse_html(check)
                 data = self.bs_page(text)
                 self.write_excel(*data, worksheet)
-                self.row += 1
             workbook.close()
         except Exception as error:
             print(f'возникла ошибка: {error}')
